@@ -1,113 +1,172 @@
-import Image from "next/image";
+"use client"
+import React, { useState, FormEvent } from 'react';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+const questions = [
+  { id: 'weight', question: '¿Cuál es tu peso actual?', type: 'number' },
+  { id: 'exercise', question: '¿Cuántas horas haces ejercicio al día?', type: 'number' },
+  { id: 'goal', question: '¿Con este tratamiento buscas resultados estéticos o de salud?', type: 'radio', options: ['Estéticos', 'Salud'] },
+  { id: 'idealWeight', question: '¿Cuál sería tu peso ideal?', type: 'number' },
+  { id: 'commitment', question: '¿Estás dispuesto a comprometerte para conseguir tus objetivos?', type: 'radio', options: ['Sí', 'No'] },
+];
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+const dietPlans = {
+  lowCommitment: {
+    name: 'Plan Básico',
+    description: 'Un plan suave para empezar con cambios pequeños.',
+    meals: [
+      'Lunes: Desayuno - Avena con frutas, Almuerzo - Ensalada de pollo, Cena - Pescado al horno con verduras',
+      'Martes: Desayuno - Tostadas integrales con aguacate, Almuerzo - Sopa de verduras, Cena - Pechuga de pavo a la plancha',
+      'Miércoles: Desayuno - Yogur con granola, Almuerzo - Wrap de vegetales, Cena - Tortilla de espinacas',
+      'Jueves: Desayuno - Batido de frutas, Almuerzo - Ensalada de atún, Cena - Pollo al curry con arroz integral',
+      'Viernes: Desayuno - Pan integral con huevos revueltos, Almuerzo - Pasta integral con verduras, Cena - Salmón a la parrilla',
+      'Sábado: Desayuno - Pancakes de avena, Almuerzo - Hamburguesa de lentejas, Cena - Revuelto de tofu',
+      'Domingo: Desayuno - Frutas variadas, Almuerzo - Quinoa con verduras, Cena - Pechuga de pollo a las hierbas'
+    ]
+  },
+  mediumCommitment: {
+    name: 'Plan Intermedio',
+    description: 'Un plan equilibrado para quienes buscan resultados moderados.',
+    meals: [
+      'Lunes: Desayuno - Smoothie proteico, Almuerzo - Pechuga de pollo con ensalada, Cena - Sopa de lentejas',
+      'Martes: Desayuno - Omelette de claras, Almuerzo - Ensalada de quinoa, Cena - Pescado al papillote',
+      'Miércoles: Desayuno - Tostadas de centeno con pavo, Almuerzo - Bowl de arroz integral con pollo y verduras, Cena - Tofu salteado',
+      'Jueves: Desayuno - Yogur griego con frutos secos, Almuerzo - Wrap de pavo y aguacate, Cena - Salmón con espárragos',
+      'Viernes: Desayuno - Batido verde, Almuerzo - Ensalada de garbanzos, Cena - Pechuga de pollo a la plancha con brócoli',
+      'Sábado: Desayuno - Tortilla de claras con espinacas, Almuerzo - Atún a la plancha con ensalada, Cena - Sopa de verduras',
+      'Domingo: Desayuno - Avena con proteína en polvo, Almuerzo - Pavo a la plancha con vegetales, Cena - Pescado blanco al horno'
+    ]
+  },
+  highCommitment: {
+    name: 'Plan Intensivo',
+    description: 'Un plan riguroso para quienes buscan resultados rápidos y están muy comprometidos.',
+    meals: [
+      'Lunes: Desayuno - Claras de huevo con espinacas, Almuerzo - Pechuga de pollo y brócoli al vapor, Cena - Pescado a la plancha con ensalada',
+      'Martes: Desayuno - Batido de proteínas con espinacas, Almuerzo - Atún a la plancha con ensalada mixta, Cena - Tofu salteado con vegetales',
+      'Miércoles: Desayuno - Avena con proteína en polvo, Almuerzo - Pavo a la plancha con espárragos, Cena - Salmón al horno con calabacín',
+      'Jueves: Desayuno - Tortilla de claras con champiñones, Almuerzo - Ensalada de pollo con aguacate, Cena - Lentejas con verduras',
+      'Viernes: Desayuno - Yogur griego con semillas de chía, Almuerzo - Filete de ternera con ensalada, Cena - Revuelto de claras con espinacas',
+      'Sábado: Desayuno - Batido proteico con frutas del bosque, Almuerzo - Pechuga de pavo con verduras a la plancha, Cena - Merluza al vapor',
+      'Domingo: Desayuno - Pan proteico con claras revueltas, Almuerzo - Pollo a la plancha con ensalada, Cena - Tortilla de claras con vegetales'
+    ]
+  }
+};
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+const defaultPlan = dietPlans.mediumCommitment;
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+const DietExpertSystem = () => {
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [answers, setAnswers] = useState<{ [key: string]: string | number }>({});
+  const [recommendedPlan, setRecommendedPlan] = useState(defaultPlan);
+  const [currentAnswer, setCurrentAnswer] = useState<string>('');
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
+  const handleAnswer = (answer: string | number) => {
+    const newAnswers = { ...answers, [questions[currentQuestion].id]: answer };
+    setAnswers(newAnswers);
+    setCurrentAnswer('');
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    if (currentQuestion < questions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      recommendDietPlan(newAnswers);
+    }
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (questions[currentQuestion].type === 'number' && currentAnswer !== '') {
+      handleAnswer(parseFloat(currentAnswer));
+    }
+  };
+
+  const recommendDietPlan = (finalAnswers: { [key: string]: string | number }) => {
+    const weight = Number(finalAnswers.weight) || 0;
+    const exercise = Number(finalAnswers.exercise) || 0;
+    const goal = String(finalAnswers.goal) || 'Salud';
+    const idealWeight = Number(finalAnswers.idealWeight) || 0;
+    const commitment = String(finalAnswers.commitment) || 'No';
+
+    let plan;
+
+    if (commitment === 'No' || exercise < 1) {
+      plan = dietPlans.lowCommitment;
+    } else if (goal === 'Salud' && Math.abs(weight - idealWeight) < 10) {
+      plan = dietPlans.mediumCommitment;
+    } else if (goal === 'Estéticos' || Math.abs(weight - idealWeight) >= 10) {
+      plan = dietPlans.highCommitment;
+    } else {
+      plan = dietPlans.mediumCommitment;
+    }
+
+    setRecommendedPlan(plan);
+    setCurrentQuestion(questions.length); // Asegura que se muestre la recomendación
+  };
+
+  const renderQuestion = () => {
+    const question = questions[currentQuestion];
+    return (
+      <Card className="w-[350px]">
+        <CardHeader>
+          <h2 className="text-2xl font-bold">{question.question}</h2>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            {question.type === 'number' ? (
+              <Input
+                type="number"
+                placeholder="Ingresa tu respuesta"
+                value={currentAnswer}
+                onChange={(e) => setCurrentAnswer(e.target.value)}
+              />
+            ) : (
+              <RadioGroup onValueChange={(value) => handleAnswer(value)}>
+                {question.options?.map((option) => (
+                  <div key={option} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option} id={option} />
+                    <Label htmlFor={option}>{option}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+            {question.type === 'number' && (
+              <Button type="submit" className="mt-4">
+                {currentQuestion < questions.length - 1 ? 'Siguiente' : 'Finalizar'}
+              </Button>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderRecommendation = () => (
+    <Card className="w-[350px]">
+      <CardHeader>
+        <h2 className="text-2xl font-bold">{recommendedPlan.name}</h2>
+      </CardHeader>
+      <CardContent>
+        <p>{recommendedPlan.description}</p>
+        <h3 className="mt-4 font-semibold">Plan semanal:</h3>
+        <ul className="list-disc pl-5">
+          {recommendedPlan.meals.map((meal, index) => (
+            <li key={index}>{meal}</li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
-}
+
+  return (
+    <div className="flex justify-center items-center min-h-screen bg-gray-100">
+      <div className="max-w-md w-full">
+        {currentQuestion < questions.length ? renderQuestion() : renderRecommendation()}
+      </div>
+    </div>
+  );
+};
+
+export default DietExpertSystem;
